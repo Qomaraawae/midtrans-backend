@@ -24,7 +24,7 @@ app.use(express.json());
 
 if (!process.env.MIDTRANS_SERVER_KEY) {
   console.error("❌ MIDTRANS_SERVER_KEY tidak ditemukan");
-  process.exit(1);
+  // Jangan exit, biarkan Vercel handle
 }
 
 const IS_PRODUCTION = process.env.MIDTRANS_IS_PRODUCTION === "true";
@@ -39,7 +39,6 @@ function getWIBExpiryTime(minutesFromNow) {
   const now = new Date();
   const expiry = new Date(now.getTime() + minutesFromNow * 60 * 1000);
 
-  // Manual offset ke WIB (UTC+7)
   const utc = expiry.getTime() + expiry.getTimezoneOffset() * 60000;
   const wibTime = new Date(utc + 3600000 * 7);
 
@@ -71,8 +70,7 @@ app.post("/create-transaction", async (req, res) => {
       "base64"
     );
 
-    // Buat expiry time dengan buffer
-    const startTime = getWIBExpiryTime(3); 
+    const startTime = getWIBExpiryTime(3);
 
     console.log(`⏰ Start time: ${startTime}`);
 
@@ -164,8 +162,14 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`✅ Server: http://localhost:${PORT}`);
-  console.log(`📡 Mode: ${IS_PRODUCTION ? "PRODUCTION" : "SANDBOX"}`);
-  console.log(`🌐 CORS: https://storecashier.netlify.app`);
-});
+// Untuk Vercel
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`✅ Server: http://localhost:${PORT}`);
+    console.log(`📡 Mode: ${IS_PRODUCTION ? "PRODUCTION" : "SANDBOX"}`);
+    console.log(`🌐 CORS: https://storecashier.netlify.app`);
+  });
+}
+
+// Export untuk Vercel
+module.exports = app;
