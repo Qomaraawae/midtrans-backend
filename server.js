@@ -13,6 +13,7 @@ app.use(
       "http://localhost:5173",
       "http://localhost:3000",
       "https://storecashier.netlify.app",
+      "https://midtrans-backend.vercel.app"
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -22,9 +23,9 @@ app.use(
 
 app.use(express.json());
 
+// Cek environment variables
 if (!process.env.MIDTRANS_SERVER_KEY) {
   console.error("❌ MIDTRANS_SERVER_KEY tidak ditemukan");
-  // Jangan exit, biarkan Vercel handle
 }
 
 const IS_PRODUCTION = process.env.MIDTRANS_IS_PRODUCTION === "true";
@@ -52,7 +53,28 @@ function getWIBExpiryTime(minutesFromNow) {
   return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss} +0700`;
 }
 
-// ENDPOINT UTAMA
+// ENDPOINT HEALTH
+app.get("/health", (req, res) => {
+  res.json({
+    status: "OK",
+    mode: IS_PRODUCTION ? "PRODUCTION" : "SANDBOX",
+    timestamp: new Date().toISOString(),
+    wibTime: getWIBExpiryTime(0),
+    message: "Backend is running on Vercel"
+  });
+});
+
+// ENDPOINT ROOT
+app.get("/", (req, res) => {
+  res.json({
+    success: true,
+    message: "Midtrans Backend API is running",
+    endpoints: ["/health", "/create-transaction", "/webhook"],
+    mode: IS_PRODUCTION ? "PRODUCTION" : "SANDBOX"
+  });
+});
+
+// ENDPOINT CREATE TRANSACTION
 app.post("/create-transaction", async (req, res) => {
   try {
     const { amount, orderId, customer } = req.body;
@@ -66,13 +88,8 @@ app.post("/create-transaction", async (req, res) => {
 
     console.log(`📝 Creating: ${orderId} - Rp ${amount}`);
 
-    const auth = Buffer.from(process.env.MIDTRANS_SERVER_KEY + ":").toString(
-      "base64"
-    );
-
+    const auth = Buffer.from(process.env.MIDTRANS_SERVER_KEY + ":").toString("base64");
     const startTime = getWIBExpiryTime(3);
-
-    console.log(`⏰ Start time: ${startTime}`);
 
     const snapResponse = await axios.post(
       `${MIDTRANS_API}/snap/v1/transactions`,
@@ -125,15 +142,7 @@ app.post("/create-transaction", async (req, res) => {
   }
 });
 
-app.get("/health", (req, res) => {
-  res.json({
-    status: "OK",
-    mode: IS_PRODUCTION ? "PRODUCTION" : "SANDBOX",
-    timestamp: new Date().toISOString(),
-    wibTime: getWIBExpiryTime(0),
-  });
-});
-
+// ENDPOINT WEBHOOK
 app.post("/webhook", async (req, res) => {
   try {
     const notification = req.body;
@@ -147,6 +156,7 @@ app.post("/webhook", async (req, res) => {
   }
 });
 
+// 404 handler
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -154,6 +164,7 @@ app.use((req, res) => {
   });
 });
 
+// Error handler
 app.use((err, req, res, next) => {
   console.error("❌ Unhandled error:", err);
   res.status(500).json({
@@ -162,12 +173,11 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Untuk Vercel
+// Untuk running lokal
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
     console.log(`✅ Server: http://localhost:${PORT}`);
     console.log(`📡 Mode: ${IS_PRODUCTION ? "PRODUCTION" : "SANDBOX"}`);
-    console.log(`🌐 CORS: https://storecashier.netlify.app`);
   });
 }
 
