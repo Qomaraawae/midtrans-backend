@@ -13,7 +13,8 @@ app.use(
       "http://localhost:5173",
       "http://localhost:3000",
       "https://storecashier.netlify.app",
-      "https://midtrans-backend.vercel.app"
+      "https://midtrans-backend.vercel.app",
+      "http://192.168.31.242:5173"
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
