@@ -124,7 +124,7 @@ app.post("/create-transaction", async (req, res) => {
         },
         enabled_payments: ["qris", "gopay", "shopeepay", "other_qris"],
         callbacks: {
-          finish: "https://flossie-unruinable-tinkly.ngrok-free.dev/payment-success",
+          finish: " https://flossie-unruinable-tinkly.ngrok-free.dev/payment-success",
         },
         expiry: {
           start_time: startTime,
