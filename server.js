@@ -7,20 +7,29 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // CORS Configuration
-app.use(
-  cors({
-    origin: [
+const allowedOrigins = process.env.CORS_ORIGINS 
+  ? process.env.CORS_ORIGINS.split(',')
+  : [
       "http://localhost:5173",
-      "http://localhost:3000",
       "https://storecashier.netlify.app",
-      "https://midtrans-backend.vercel.app",
-      "http://192.168.31.242:5173"
-    ],
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-  })
-);
+      "https://flossie-unruinable-tinkly.ngrok-free.dev"
+    ];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+}));
 
 app.use(express.json());
 
@@ -106,7 +115,7 @@ app.post("/create-transaction", async (req, res) => {
         },
         enabled_payments: ["qris", "gopay", "shopeepay", "other_qris"],
         callbacks: {
-          finish: "https://storecashier.netlify.app/payment-success",
+          finish: "https://flossie-unruinable-tinkly.ngrok-free.dev/payment-success",
         },
         expiry: {
           start_time: startTime,
