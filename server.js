@@ -21,7 +21,7 @@ app.use(cors({
 
 app.use(express.json());
 
-// Root endpoint (wajib ada)
+// Root endpoint
 app.get("/", (req, res) => {
   res.json({
     success: true,
@@ -42,6 +42,10 @@ app.get("/health", (req, res) => {
 
 // Create transaction endpoint
 app.post("/create-transaction", async (req, res) => {
+  // ✅ Pindahkan console.log ke dalam sini
+  console.log("MIDTRANS_SERVER_KEY exists:", !!process.env.MIDTRANS_SERVER_KEY);
+  console.log("Request body:", req.body);
+  
   try {
     const { amount, orderId, customer } = req.body;
 
@@ -137,7 +141,7 @@ app.use((err, req, res, next) => {
 // Export untuk Vercel
 module.exports = app;
 
-// Untuk running lokal (bukan di Vercel)
+// Untuk running lokal
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
