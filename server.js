@@ -10,6 +10,7 @@ const PORT = process.env.PORT || 3001;
 app.use(cors({
   origin: [
     "http://localhost:5173",
+    "http://localhost:5174",
     "http://localhost:3000",
     "https://storecashier.netlify.app",
     "https://midtrans-backend-ashy.vercel.app"
@@ -42,7 +43,6 @@ app.get("/health", (req, res) => {
 
 // Create transaction endpoint
 app.post("/create-transaction", async (req, res) => {
-  // ✅ Pindahkan console.log ke dalam sini
   console.log("MIDTRANS_SERVER_KEY exists:", !!process.env.MIDTRANS_SERVER_KEY);
   console.log("Request body:", req.body);
   
